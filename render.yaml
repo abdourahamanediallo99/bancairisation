@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: laravel-api
+    env: docker
+    region: oregon
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile
+    buildCommand: |
+      php artisan migrate --force
+      php artisan passport:keys --force
+      php artisan passport:install --force || true
+      php artisan db:seed --class=PassportKeySeeder || true
+      php artisan l5-swagger:generate
+      php artisan config:cache
+      php artisan route:cache
+      php artisan view:cache
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: QUEUE_CONNECTION
+        value: redis
+      - key: CACHE_DRIVER
+        value: redis
+      - key: SESSION_DRIVER
+        value: redis
+
+  - type: redis
+    name: redis
+    ipAllowList: []
+    plan: free
+
+  - type: pgsql
+    name: postgres
+    ipAllowList: []
+    plan: free
