@@ -30,7 +30,7 @@ RUN chown -R www-data:www-data /var/www \
 # === Supervisor + Nginx ===
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/nginx.conf /etc/nginx/sites-available/default
-RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
+RUN mkdir -p /etc/nginx/sites-enabled && ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
 
 # === Entrypoint (migrations + keys) ===
 COPY docker/docker-entrypoint.sh /usr/local/bin/
