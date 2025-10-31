@@ -1,7 +1,7 @@
 services:
   - type: web
-    name: laravel-api
-    env: docker
+    name: gestion_bancaire
+
     region: oregon
     plan: starter
     dockerfilePath: ./docker/Dockerfile
@@ -19,7 +19,7 @@ services:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: false
+        value: "false"
       - key: LOG_CHANNEL
         value: stderr
       - key: QUEUE_CONNECTION
@@ -31,10 +31,5 @@ services:
 
   - type: redis
     name: redis
-    ipAllowList: []
-    plan: free
-
-  - type: pgsql
-    name: postgres
     ipAllowList: []
     plan: free
