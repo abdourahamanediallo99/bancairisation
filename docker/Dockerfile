@@ -1,31 +1,44 @@
-FROM php:8.3-fpm
+# docker/Dockerfile
+FROM php:8.3-fpm-alpine AS base
 
-RUN apt-get update && apt-get install -y \
+# === 1. Dépendances système ===
+RUN apk add --no-cache \
     git curl zip unzip supervisor nginx \
-    libpng-dev libonig-dev libxml2-dev libzip-dev libpq-dev \
-    && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd zip \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    libpng-dev libzip-dev postgresql-dev \
+    && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd zip
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# === 2. Composer (multi-stage) ===
+FROM composer:2.7 AS composer
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
-
+# === 3. Image finale ===
+FROM base
 WORKDIR /var/www
+
+# === Copie code + vendor ===
+COPY --from=composer /app/vendor ./vendor
 COPY . .
 
+# === Permissions ===
 RUN chown -R www-data:www-data /var/www \
-    && chmod -R 755 storage bootstrap/cache
+    && chmod -R 755 storage bootstrap/cache \
+    && mkdir -p /var/log/nginx /var/log/supervisor \
+    && chown -R www-data:www-data /var/log/nginx /var/log/supervisor
 
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-
-
+# === Supervisor + Nginx ===
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/nginx.conf /etc/nginx/sites-available/default
 RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
 
-# Secret Files : permissions sur clés Passport
-RUN chmod 600 /var/www/storage/oauth-*.key 2>/dev/null || true
+# === Entrypoint (migrations + keys) ===
+COPY docker/docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
+# === Expose ===
 EXPOSE 80
+
+# === CMD ===
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
