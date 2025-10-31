@@ -4,7 +4,7 @@ FROM php:8.3-fpm-alpine AS base
 # === 1. Dépendances système ===
 RUN apk add --no-cache \
     git curl zip unzip supervisor nginx \
-    libpng-dev libzip-dev postgresql-dev \
+    libpng-dev libzip-dev postgresql-dev oniguruma-dev \
     && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd zip
 
 # === 2. Composer (multi-stage) ===
