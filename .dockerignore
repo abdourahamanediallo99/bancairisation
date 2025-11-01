@@ -1,7 +1,5 @@
 node_modules
-npm-debug.log
-.env
-storage/*.key
 vendor
-public/storage
-
+storage/logs
+.git
+.env

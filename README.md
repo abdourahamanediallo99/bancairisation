@@ -116,4 +116,3 @@ Avec ces mesures, la documentation Swagger et toute l'application sont accessibl
 ## Auteur
 
 Abdourahamane TINKIN DJEERI
-# bancairisation
